@@ -1,5 +1,5 @@
 const express = require('express');
-
+const authenticate = require('../authenticate');
 const Promotion = require('../models/promotion');
 const promotionRouter = express.Router();
 
