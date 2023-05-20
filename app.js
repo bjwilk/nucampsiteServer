@@ -4,6 +4,7 @@ const dotenv = require("dotenv").config({ path: "config.env"});
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
+const config = require('./config')
 
 const passport = require('passport');
 const authenticate = require('./authenticate');
@@ -16,6 +17,21 @@ const campsiteRouter = require('./routes/campsiteRouter');
 const promotionRouter = require('./routes/promotionRouter');
 const partnerRouter = require('./routes/partnerRouter');
 const uploadRouter = require('./routes/uploadRouter');
+const favoriteRouter = require('./routes/favoriteRouter')
+
+const mongoose = require('mongoose');
+
+const url = config.mongoUrl;
+const connect = mongoose.connect(url, {
+    useCreateIndex: true,
+    useFindAndModify: false,
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+});
+
+connect.then(() => console.log('Connected correctly to server'),
+    err => console.log(err)
+);
 
 const session = require('express-session');
 const FileStore = require('session-file-store')(session);
@@ -79,6 +95,7 @@ app.use('/campsites', campsiteRouter);
 app.use('/promotions', promotionRouter);
 app.use('/partners', partnerRouter);
 app.use('/imageUpload', uploadRouter);
+ app.use('/favorite', favoriteRouter);
 
 
 // catch 404 and forward to error handler
@@ -98,7 +115,7 @@ app.use(function(err, req, res, next) {
 });
 
 app.listen(PORT, async () => {
-  await connectDB();
+  //await connectDB();  //connecting to mongo Atlas
   console.log(`server is running at ${PORT}`)
 })
 
