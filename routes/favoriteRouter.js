@@ -18,22 +18,49 @@ favoriteRouter.route('/')
     })
     .catch(err => next(err));
 })
-.post(cors.corsWithOptions, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
-
-    Favorite.create(req.body)
+.post(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
+    Favorite.findOne({ user: req.user._id })
     .then(favorite => {
-        console.log('Favorites Created ');
-        res.statusCode = 200;
-        res.setHeader('Content-Type', 'application/json');
-        res.json(favorite);
-    })
-    .catch(err => next(err));
+        if (favorite) {
+            req.body.forEach(fav => {
+                if (!favorite.campsites.includes(fav._id)) {
+                    favorite.campsites.push(fav._id);
+                }
+            });
+            console.log(favorite)
+            favorite.save()
+            .then(favorite => {
+                res.statusCode = 200;
+                res.setHeader('Content-Type', 'application/json');
+                res.json(favorite);
+            })
+            .catch(err => next(err));
+        } else {
+            Favorite.create({ user: req.user._id })
+            .then(favorite => {
+                req.body.forEach(fav => {
+                    if (!favorite.campsites.includes(fav._id)) {
+                        favorite.campsites.push(fav._id);
+                    }
+                });
+                console.log(favorite)
+                 favorite.save()
+                .then(favorite => {
+                    res.statusCode = 200;
+                    res.setHeader('Content-Type', 'application/json');
+                    res.json(favorite);
+                })
+                .catch(err => next(err));
+            })
+            .catch(err => next(err));
+        }
+    }).catch(err => next(err));
 })
-.put(cors.corsWithOptions, authenticate.verifyUser, authenticate.verifyAdmin, (req, res) => {
+.put(cors.corsWithOptions, authenticate.verifyUser, (req, res) => {
     res.statusCode = 403;
     res.end('PUT operation not supported on /campsites');
 })
-.delete(cors.corsWithOptions, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
+.delete(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
     Favorite.deleteMany()
     .then(response => {
         res.statusCode = 200;
@@ -43,7 +70,7 @@ favoriteRouter.route('/')
     .catch(err => next(err));
 });
 
-favoriteRouter.route('/:favoriteId')
+favoriteRouter.route('/:campsiteId')
 .options(cors.corsWithOptions, (req, res) => res.sendStatus(200))
 .get(cors.cors, (req, res, next) => {
     Favorite.findById(req.params.campsiteId)
@@ -57,10 +84,10 @@ favoriteRouter.route('/:favoriteId')
 })
 .post(cors.corsWithOptions, authenticate.verifyUser,  (req, res) => {
     res.statusCode = 403;
-    res.end(`POST operation not supported on /campsites/${req.params.favoriteId}`);
+    res.end(`POST operation not supported on /campsites/${req.params.campsiteId}`);
 })
 .put(cors.corsWithOptions, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
-    Favorite.findByIdAndUpdate(req.params.favoriteId, {
+    Favorite.findByIdAndUpdate(req.params.campsiteId, {
         $set: req.body
     }, { new: true })
     .then(favorite => {
@@ -71,7 +98,7 @@ favoriteRouter.route('/:favoriteId')
     .catch(err => next(err));
 })
 .delete(cors.corsWithOptions, authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
-    Favorite.findByIdAndDelete(req.params.favoriteId)
+    Favorite.findByIdAndDelete(req.params.campsiteId)
     .then(response => {
         res.statusCode = 200;
         res.setHeader('Content-Type', 'application/json');
